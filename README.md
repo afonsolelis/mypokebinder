@@ -1,190 +1,169 @@
 # 🎴 MyPokeBinder
 
-Um aplicativo web para colecionadores de cards Pokémon criado com Streamlit e Supabase.
+Uma aplicação web completa para colecionadores de cards Pokémon, desenvolvida com **Streamlit**, **Supabase** e **Cloudinary**.
 
-## 🚀 Funcionalidades
+## ✨ Funcionalidades
 
-- **Autenticação de Usuários**: Sistema de login/registro com Supabase Auth
-- **Gerenciamento de Cards**: Cadastro, edição e exclusão de cards
-- **Upload de Imagens**: Armazenamento de fotos dos cards no Supabase Storage
-- **Páginas Públicas**: Cada usuário tem uma página pública para compartilhar sua coleção
-- **Filtros e Busca**: Filtros por nome, linguagem e ordenação por diferentes critérios
-- **Interface Responsiva**: Design moderno e intuitivo
+### 🔐 **Autenticação**
+- ✅ Registro e login com Supabase Auth
+- ✅ Confirmação de email
+- ✅ Sessões seguras
+
+### 📱 **Gestão de Cards**
+- ✅ **Adicionar cards** com foto, nome, número, idioma, valor e descrição
+- ✅ **Editar cards** existentes (todos os campos)
+- ✅ **Deletar cards** (remove imagem do Cloudinary e registro do banco)
+- ✅ **Visualizar cards** em detalhes
+- ✅ **Validação de número** do card (formato 027/182 com campos separados)
+- ✅ **Upload de imagens** otimizado via Cloudinary
+
+### 🎯 **Interface Intuitiva**
+- ✅ **Grid responsivo** de cards
+- ✅ **Filtros** por nome, idioma e ordenação
+- ✅ **Navegação** com botões sempre visíveis
+- ✅ **Feedback visual** (spinners, mensagens de sucesso/erro)
+- ✅ **Redirecionamento automático** após ações
+
+### 🌐 **Páginas Públicas**
+- ✅ **Compartilhamento** de coleções via URL
+- ✅ **Visualização pública** para não logados
+- ✅ **Estatísticas** da coleção (total, valor, idiomas)
+- ✅ **Cards mais valiosos** em destaque
+- ✅ **Filtros e ordenação** nas páginas públicas
+
+### 📊 **Estatísticas e Análises**
+- ✅ **Valor total** da coleção
+- ✅ **Contagem** de cards por idioma
+- ✅ **Card mais valioso** identificado
+- ✅ **Métricas visuais** com Streamlit
+
+## 🚀 Tecnologias
+
+- **Frontend:** Streamlit (Python)
+- **Backend:** Supabase (PostgreSQL + Auth)
+- **Storage:** Cloudinary (imagens)
+- **Deploy:** Streamlit Cloud
 
 ## 📋 Pré-requisitos
 
 - Python 3.8+
 - Conta no Supabase
-- Conta no GitHub (opcional, para deploy)
+- Conta no Cloudinary
+- Git
 
-## 🛠️ Configuração
+## 🛠️ Instalação
 
-### 1. Clone o repositório
+### 1. **Clone o repositório**
 ```bash
-git clone <url-do-repositorio>
+git clone <seu-repositorio>
 cd mypokebinder
 ```
 
-### 2. Instale as dependências
+### 2. **Instale as dependências**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure o Cloudinary
-
-1. Crie uma conta em [cloudinary.com](https://cloudinary.com)
-2. Obtenha suas credenciais (Cloud Name, API Key, API Secret)
-3. Configure no arquivo `.env`:
-   ```env
-   CLOUDINARY_CLOUD_NAME=seu_cloud_name
-   CLOUDINARY_API_KEY=sua_api_key
-   CLOUDINARY_API_SECRET=sua_api_secret
-   ```
-
-**📖 Para mais detalhes, consulte [CLOUDINARY_SETUP.md](CLOUDINARY_SETUP.md)**
-
-### 4. Configure o Supabase
-
-#### 3.1 Crie um projeto no Supabase
-1. Acesse [supabase.com](https://supabase.com)
-2. Crie uma nova conta ou faça login
-3. Crie um novo projeto
-4. Anote a URL e a chave anônima do projeto
-
-#### 3.2 Configure o banco de dados
-Execute os seguintes comandos SQL no SQL Editor do Supabase:
-
-```sql
--- Criar tabela de cards
-CREATE TABLE cards (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    number VARCHAR(50) NOT NULL,
-    language VARCHAR(50) NOT NULL,
-    estimated_value DECIMAL(10,2) DEFAULT 0.00,
-    description TEXT,
-    image_url TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Criar índices para melhor performance
-CREATE INDEX idx_cards_user_id ON cards(user_id);
-CREATE INDEX idx_cards_name ON cards(name);
-CREATE INDEX idx_cards_language ON cards(language);
-
--- Habilitar RLS (Row Level Security)
-ALTER TABLE cards ENABLE ROW LEVEL SECURITY;
-
--- Política para usuários verem apenas seus próprios cards
-CREATE POLICY "Users can view their own cards" ON cards
-    FOR SELECT USING (auth.uid() = user_id);
-
--- Política para usuários inserirem seus próprios cards
-CREATE POLICY "Users can insert their own cards" ON cards
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Política para usuários atualizarem seus próprios cards
-CREATE POLICY "Users can update their own cards" ON cards
-    FOR UPDATE USING (auth.uid() = user_id);
-
--- Política para usuários deletarem seus próprios cards
-CREATE POLICY "Users can delete their own cards" ON cards
-    FOR DELETE USING (auth.uid() = user_id);
-
--- Política para visualização pública (apenas leitura)
-CREATE POLICY "Public can view all cards" ON cards
-    FOR SELECT USING (true);
-```
-
-#### 4.3 Configure o Banco de Dados
-
-**Nota**: Com o Cloudinary, não precisamos mais do Storage do Supabase para imagens.
-
-### 5. Configure as variáveis de ambiente
-
-1. **Copie o arquivo de exemplo:**
-   ```bash
-   cp env.example .env
-   ```
-
-2. **Edite o arquivo `.env`** e preencha com suas credenciais:
-   ```env
-   # Supabase
-   SUPABASE_URL=sua_url_do_supabase
-   SUPABASE_KEY=sua_chave_anonima_do_supabase
-   
-   # Cloudinary
-   CLOUDINARY_CLOUD_NAME=seu_cloud_name
-   CLOUDINARY_API_KEY=sua_api_key
-   CLOUDINARY_API_SECRET=sua_api_secret
-   ```
-
-**📖 Para mais detalhes sobre cada variável, consulte o arquivo `env.example`**
-
-### 6. Execute o aplicativo
+### 3. **Configure as variáveis de ambiente**
 ```bash
-streamlit run app.py
+cp env.example .env
 ```
 
-O aplicativo estará disponível em `http://localhost:8501`
+Edite o arquivo `.env` com suas credenciais:
+```env
+# Supabase
+SUPABASE_URL=sua_url_do_supabase
+SUPABASE_KEY=sua_chave_do_supabase
 
-## 📱 Como usar
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=seu_cloud_name
+CLOUDINARY_API_KEY=sua_api_key
+CLOUDINARY_API_SECRET=seu_api_secret
+```
 
-### Para usuários logados:
-1. **Registro/Login**: Crie uma conta ou faça login
-2. **Adicionar Cards**: Use a seção "Adicionar Card" para cadastrar novos cards
-3. **Gerenciar Binder**: Visualize, edite e organize seus cards na seção "Meu Binder"
-4. **Página Pública**: Compartilhe sua coleção através da URL pública
+### 4. **Configure o Supabase**
+Execute o SQL do arquivo `supabase_setup.sql` no SQL Editor do Supabase.
 
-### Para visitantes:
-- Acesse a URL pública de qualquer usuário para ver sua coleção
-- Visualize os cards em detalhes clicando neles
+### 5. **Execute o script de inicialização**
+```bash
+python start_windows.py  # Para Windows
+# ou
+python start.py          # Para Linux/Mac
+```
 
-## 🗂️ Estrutura do Projeto
+## 📚 Estrutura do Projeto
 
 ```
 mypokebinder/
-├── app.py              # Aplicação principal
-├── config.py           # Configurações e conexão com Supabase
-├── requirements.txt    # Dependências Python
-├── README.md          # Este arquivo
-└── .env              # Variáveis de ambiente (não versionado)
+├── app.py                 # Aplicação principal
+├── config.py             # Configurações do Supabase
+├── cloudinary_config.py  # Configurações do Cloudinary
+├── cloudinary_utils.py   # Utilitários do Cloudinary
+├── requirements.txt      # Dependências Python
+├── .streamlit/          # Configurações do Streamlit
+├── migrations/          # Scripts de migração
+├── docs/               # Documentação
+└── scripts/            # Scripts auxiliares
 ```
 
-## 🔧 Tecnologias Utilizadas
+## 🎮 Como Usar
 
-- **Streamlit**: Framework web para Python
-- **Supabase**: Backend-as-a-Service (Auth, Database)
-- **PostgreSQL**: Banco de dados relacional
-- **Cloudinary**: Gerenciamento e otimização de imagens
-- **Pillow**: Processamento de imagens local
+### **Para Usuários**
+1. **Acesse:** https://mypokebinder.streamlit.app/
+2. **Registre-se** ou faça login
+3. **Adicione cards** com fotos e detalhes
+4. **Compartilhe** sua coleção via link público
+5. **Gerencie** seus cards (editar/deletar)
+
+### **Para Desenvolvedores**
+1. Clone e configure o projeto
+2. Execute `python start_windows.py`
+3. Acesse `http://localhost:8501`
+
+## 🔧 Funcionalidades Técnicas
+
+### **Gestão de Cards**
+- **CRUD completo** (Create, Read, Update, Delete)
+- **Validação de entrada** (números, imagens)
+- **Upload otimizado** de imagens
+- **Limpeza automática** do storage
+
+### **Páginas Públicas**
+- **URLs únicas** por usuário
+- **Acesso sem login** para visualização
+- **Filtros e ordenação** públicos
+- **Estatísticas em tempo real**
+
+### **Segurança**
+- **Row Level Security** (RLS) no Supabase
+- **Autenticação** via Supabase Auth
+- **Validação** de propriedade dos cards
+- **Sanitização** de inputs
+
+## 📖 Documentação Adicional
+
+- [📋 Guia de Configuração](SETUP_GUIDE.md)
+- [☁️ Configuração do Cloudinary](CLOUDINARY_SETUP.md)
+- [🗄️ Configuração do Supabase](SUPABASE_SETUP.md)
+- [🏗️ Estrutura do Projeto](PROJECT_STRUCTURE.md)
 
 ## 🚀 Deploy
 
-### Deploy no Streamlit Cloud
-1. Faça push do código para o GitHub
-2. Acesse [share.streamlit.io](https://share.streamlit.io)
-3. Conecte seu repositório
-4. Configure as variáveis de ambiente no painel do Streamlit Cloud
-5. Deploy!
+### **Streamlit Cloud**
+1. Conecte seu repositório ao Streamlit Cloud
+2. Configure as variáveis de ambiente
+3. Deploy automático
 
-### Deploy no Heroku
-1. Crie um arquivo `Procfile`:
-```
-web: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
-```
-
-2. Configure as variáveis de ambiente no painel do Heroku
-3. Deploy usando Git
+### **URL de Produção**
+- **Aplicação:** https://mypokebinder.streamlit.app/
+- **Páginas públicas:** `https://mypokebinder.streamlit.app/?user=email@exemplo.com`
 
 ## 🤝 Contribuição
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
 5. Abra um Pull Request
 
 ## 📄 Licença
@@ -193,19 +172,10 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 🆘 Suporte
 
-Se você encontrar algum problema ou tiver dúvidas:
+- **Issues:** Abra uma issue no GitHub
+- **Documentação:** Consulte os arquivos `.md` na pasta `docs/`
+- **Configuração:** Siga o [Guia de Configuração](SETUP_GUIDE.md)
 
-1. Verifique se todas as configurações do Supabase estão corretas
-2. Certifique-se de que as variáveis de ambiente estão configuradas
-3. Verifique se o bucket de storage foi criado corretamente
-4. Abra uma issue no GitHub
+---
 
-## 🎯 Roadmap
-
-- [ ] Sistema de tags para cards
-- [ ] Estatísticas da coleção
-- [ ] Sistema de trocas entre usuários
-- [ ] API para integração com outros sistemas
-- [ ] App mobile (React Native)
-- [ ] Sistema de notificações
-- [ ] Backup automático da coleção
+**🎴 MyPokeBinder** - Organize, compartilhe e gerencie sua coleção de cards Pokémon! ✨
