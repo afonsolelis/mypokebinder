@@ -382,15 +382,29 @@ def show_my_binder():
             st.write(f"R$ {card['estimated_value']:.2f}")
             
             # Botões de ação
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
-                if st.button("Ver", key=f"view_{card['id']}"):
+                if st.button("👁️ Ver", key=f"view_{card['id']}"):
                     st.session_state.viewing_card = card['id']
                     st.rerun()
             with col2:
-                if st.button("Editar", key=f"edit_{card['id']}"):
+                if st.button("✏️ Editar", key=f"edit_{card['id']}"):
                     st.session_state.editing_card = card['id']
                     st.rerun()
+            with col3:
+                if st.button("🗑️ Deletar", key=f"delete_{card['id']}"):
+                    with st.spinner("🗑️ Deletando card..."):
+                        if delete_card(card['id']):
+                            st.success("✅ Card deletado com sucesso!")
+                            st.info("🔄 Redirecionando...")
+                            
+                            # Aguardar um pouco para mostrar a mensagem
+                            import time
+                            time.sleep(2)
+                            
+                            st.rerun()
+                        else:
+                            st.error("❌ Erro ao deletar o card")
 
 # Página para visualizar um card específico
 def show_card_detail(card_id):
@@ -541,7 +555,7 @@ def show_public_page():
     # Título já está no topo da página principal
     
     # Gerar URL da página pública
-    public_url = f"https://pokebinder.streamlit.app/?user={st.session_state.user.email}"
+    public_url = f"https://mypokebinder.streamlit.app/?user={st.session_state.user.email}"
     
     # Container para o link público
     with st.container():
